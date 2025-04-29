@@ -70,10 +70,33 @@ void main() {
 
 	// Compute ambient reflection
 	vec3 ambientReflection = material.ambient * ambientLightColor;
-
 	vec3 fColor = ambientReflection;
 
+	vec4 P = vec4(fragPosCam,1.0);
+	vec3 N = normalize(normalCam);
+
+	for(int i = 0; i < NUM_POINT_LIGHTS; i++) {
+		vec4 Lview = viewMat* vec4(pointLights[i].position,1.0);
+		vec4 L = Lview - P; //vector from x to light position in view space
+		vec3 R = reflect(-normalize(L.xyz),N);
+		float a = 1.0/(attenuation[0]+attenuation[1]*length(L)+attenuation[2]*length(L)*length(L));
+		float d = max(dot(N,normalize(L.xyz)),0.0); //diffuse factor
+		float s = pow(max(dot(R,normalize(-P.xyz)),0.0),material.shininess); //shine factor
+		fColor += a * (d * material.diffuse * pointLights[i].color + s * material.specular * pointLights[i].color);
+	}  
+
+	for(int i = 0; i < NUM_DIR_LIGHTS; i++) {
+		vec4 Lview = viewMat* vec4(directionalLights[i].direction,0.0);
+		vec3 R = reflect(normalize(Lview.xyz),N);
+		float d = max(dot(N,-normalize(Lview.xyz)),0.0);
+		float s = pow(max(dot(R,normalize(-P.xyz)),0.0),material.shininess);
+		fColor += (d * material.diffuse * directionalLights[i].color + s * material.specular * directionalLights[i].color);
+
+	}
+
+
 	gl_FragColor = vec4( fColor, 1.0 );
+	
 
 }
 ` );

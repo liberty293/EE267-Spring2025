@@ -56,11 +56,25 @@ attribute vec3 normal;
 
 
 void main() {
+	//translate into view space
+	vec4 P =  modelViewMat * vec4(position,1.0);
+	vec3 N = normalMat * normal;
+	
+	for(int i = 0; i < NUM_POINT_LIGHTS; i++) {
+		vec4 Lview = viewMat* vec4(pointLights[i].position,1.0);
+		vec4 L = Lview - P; //vector from x to position, then in view space
+		vec3 R = reflect(-normalize(L.xyz),N);
+		float a = 1.0/(attenuation[0]+attenuation[1]*length(L)+attenuation[2]*length(L)*length(L));
+		float d = max(dot(N,normalize(L.xyz)),0.0); //diffuse factor
+		float s = pow(max(dot(R,normalize(-P.xyz)),0.0),material.shininess); //shine factor
+		vColor += a * (d * material.diffuse * pointLights[i].color + s * material.specular * pointLights[i].color);;
+	}
 
 	// Compute ambient reflection
 	vec3 ambientReflection = material.ambient * ambientLightColor;
 
-	vColor = ambientReflection;
+	vColor += ambientReflection ;
+	//vColor = R;
 
 	gl_Position =
 		projectionMat * modelViewMat * vec4( position, 1.0 );

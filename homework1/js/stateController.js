@@ -121,6 +121,7 @@ var StateController = function ( dispParams ) {
 
 			updateModelParams( e, movement );
 
+			_this.state.
 		}
 
 		// Check if the viewer position control button is clicked.
@@ -160,8 +161,9 @@ var StateController = function ( dispParams ) {
 	function computeMovement( x, y, previousPosition ) {
 
 		/* TODO (2.1.1.1) Mouse Movement */
-
-		return new THREE.Vector2();
+		var newPos = new THREE.Vector2(x-previousPosition.x,y-previousPosition.y);
+		previousPosition.set(x,y);
+		return newPos;
 
 	}
 
@@ -194,15 +196,19 @@ var StateController = function ( dispParams ) {
 		if ( e.shiftKey && ! ctrlKey ) {
 
 			// XY translation
+			//console.log(new THREE.Vector3(movement.x,-movement.y,0));
+			_this.state.modelTranslation.add(new THREE.Vector3(movement.x,-movement.y,0));
 
 		} else if ( ! e.shiftKey && ctrlKey ) {
 
 			// Z translation
+			_this.state.modelTranslation.add(new THREE.Vector3(0,0,movement.y));
 
 
 		} else {
 
 			// Rotation
+			_this.state.modelRotation.add(new THREE.Vector3(movement.y,movement.x,0));
 
 		}
 
@@ -218,7 +224,6 @@ var StateController = function ( dispParams ) {
 	function updateViewPosition( e, movement ) {
 
 		/* TODO (2.2.1) Move viewer position */
-
 		var ctrlKey = e.metaKey // for Mac's command key
 			|| ( navigator.platform.toUpperCase().indexOf( "MAC" ) == - 1
 				&& e.ctrlKey );
@@ -227,10 +232,13 @@ var StateController = function ( dispParams ) {
 		if ( ! ctrlKey ) {
 
 			// XY translation
+			_this.state.viewerPosition.add(new THREE.Vector3(movement.x,-movement.y,0));
+
 
 		} else {
 
 			// Z translation
+			_this.state.viewerPosition.add(new THREE.Vector3(0,0,movement.y));
 
 		}
 
@@ -255,10 +263,12 @@ var StateController = function ( dispParams ) {
 		if ( ! ctrlKey ) {
 
 			// XY translation
+			_this.state.viewerTarget.add(new THREE.Vector3(movement.x,-movement.y,0));
 
 		} else {
 
 			// Z translation
+			_this.state.viewerTarget.add(new THREE.Vector3(0,0,movement.y));
 
 		}
 
@@ -274,6 +284,8 @@ var StateController = function ( dispParams ) {
 	function updateProjectionParams( e, movement ) {
 
 		/* TODO (2.3.1) Implement Perspective Transform */
+		_this.state.clipNear += movement.y;
+		_this.state.clipFar = _this.state.clipFar < 1 ? 1 : _this.state.clipFar;
 
 	}
 

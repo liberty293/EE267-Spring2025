@@ -47,7 +47,7 @@ attribute vec3 normal;
 
 	struct PointLight {
 		vec3 color;
-		vec3 position;
+		vec3 position; //I believe this is world space??
 	};
 
 	uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
@@ -57,13 +57,29 @@ attribute vec3 normal;
 
 void main() {
 
+	//translate into view space
+	vec4 P =  modelViewMat * vec4(position,1.0);
+	vec3 N = normalMat * normal;
+
+
 	// Compute ambient reflection
 	vec3 ambientReflection = material.ambient * ambientLightColor;
-
-	vColor = ambientReflection;
+	for(int i = 0; i < NUM_POINT_LIGHTS; i++) {
+		vec4 Lview = viewMat* vec4(pointLights[i].position,1.0);
+		vec4 L = Lview - P; //vector from x to position, then in view space
+		float a = 1.0/(attenuation[0]+attenuation[1]*length(L)+attenuation[2]*length(L)*length(L));
+		float d = max(dot(N,normalize(L.xyz)),0.0);
+		vColor += a * d * material.diffuse * pointLights[i].color;
+	}
+	vColor += ambientReflection;
+	//vColor.r = dot(N,normalize(L.xyz));
 
 	gl_Position =
 		projectionMat * modelViewMat * vec4( position, 1.0 );
+
+
+
+
 
 }
 ` );

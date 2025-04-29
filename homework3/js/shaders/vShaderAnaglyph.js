@@ -1,13 +1,12 @@
 /**
- * @file Phong vertex shader with point and directional lights
+ * @file vertex shader for anaglyph rendering
  *
  * @copyright The Board of Trustees of the Leland Stanford Junior University
- * @version 2021/04/01
+ * @version 2022/04/14
  */
 
-/* TODO (2.3) */
 
-var shaderID = "vShaderMultiPhong";
+var shaderID = "vShaderAnaglyph";
 
 var shader = document.createTextNode( `
 /**
@@ -15,24 +14,22 @@ var shader = document.createTextNode( `
  * to a fragment shader. In the fragment shader, these variables are
  * interpolated between neighboring vertexes.
  */
-varying vec3 normalCam; // Normal in view coordinate
-varying vec3 fragPosCam; // Vertex position in view cooridnate
+varying vec2 textureCoords;
 
-uniform mat4 modelViewMat;
-uniform mat4 projectionMat;
-uniform mat3 normalMat;
 
+// Four vertices positions of the rectangle:
+// (-1,1,0), (1,1,0), (-1,-1,0), (1,-1,0)
 attribute vec3 position;
-attribute vec3 normal;
+
+// Four texture coordinates of the rectangle:
+// (0,1), (1,1), (0,0), (1,0)
+attribute vec2 uv;
 
 void main() {
 
-	vec4 P =  modelViewMat * vec4(position,1.0);
-	fragPosCam = P.xyz/P.w;
-	normalCam = normalMat * normal;
+	textureCoords = uv;
 
-	gl_Position = projectionMat * modelViewMat * vec4( position, 1.0 );
-
+	gl_Position = vec4( position, 1.0 );
 
 }
 ` );

@@ -1,6 +1,7 @@
 /**
  * @file EE267 Virtual Reality
- * Homework 1 - Getting Started with WebGL and Transformations
+ * Homework 3
+ * Foveated Rendering, Depth of Field, Stereo Rendering, Anaglyph 3D
  *
  * In our homework, we heavily rely on THREE.js library for rendering.
  * THREE.js is a wonderful library to render a complicated scene without
@@ -16,10 +17,9 @@
  * the JavaScript/WebGL version was developed by Hayato Ikoma in 2017.
  *
  * @copyright The Board of Trustees of the Leland Stanford Junior University
- * @version 2025/03/18
- * This version uses Three.js (r175), stats.js (r17) and jQuery (3.2.1).
+ * @version 2022/04/14
+ * This version uses Three.js (r127), stats.js (r17) and jQuery (3.2.1).
  */
-
 // Set up display parameters.
 // Please use the parameters of your own environment.
 // Length of the monitor's diagonal in [inch]
@@ -27,11 +27,10 @@
 //      Macbook Pro 15" => 15.4 inch
 var screenDiagonal = 16.2;
 
-// The valus should be specified in [mm].
-var	distanceScreenViewer = 800.0;
+// Distance between the viewer and the monitor in [mm]
+var distanceScreenViewer = 800.0;
 
 var dispParams = new DisplayParameters( distanceScreenViewer, screenDiagonal );
-
 
 // Create an instance for Javascript performance monitor.
 // In our class, we would like to visualize the number of frames rendered
@@ -61,31 +60,39 @@ $( ".renderCanvas" ).prepend( webglRenderer.domElement );
 
 // Set the size of the renderer based on the current window size.
 webglRenderer.setSize( dispParams.canvasWidth, dispParams.canvasHeight );
-console.log(dispParams);
 
 
-// Define three teapots
+// add teapots with different shaders
 var teapots = [];
 
-var leftTeapot = new Teapot(
-	new THREE.Vector3( - 50, 0, - 150 ),
-	$( "#vShader" ).text(), $( "#fShader" ).text() );
+var teapot1 =
+	new Teapot( new THREE.Vector3( - 70, 10, 0 ),
+		$( "#vShaderMultiPhong" ).text(),
+		$( "#fShaderMultiPhong" ).text() );
 
-teapots.push( leftTeapot );
+teapots.push( teapot1 );
+
+var teapot2 =
+	new Teapot( new THREE.Vector3( 0, - 30, 100 ),
+		$( "#vShaderMultiPhong" ).text(),
+		$( "#fShaderMultiPhong" ).text() );
+
+teapots.push( teapot2 );
 
 
-var centerTeapot = new Teapot(
-	new THREE.Vector3( 0, 0, 0 ),
-	$( "#vShader" ).text(), $( "#fShader" ).text() );
+var teapot3 =
+	new Teapot( new THREE.Vector3( 70, - 10, - 130 ),
+		$( "#vShaderMultiPhong" ).text(),
+		$( "#fShaderMultiPhong" ).text() );
 
-teapots.push( centerTeapot );
+teapots.push( teapot3 );
 
+var teapot4 =
+	new Teapot( new THREE.Vector3( 0, 60, - 200 ),
+		$( "#vShaderMultiPhong" ).text(),
+		$( "#fShaderMultiPhong" ).text() );
 
-var rightTeapot = new Teapot(
-	new THREE.Vector3( 50, 0, 150 ),
-	$( "#vShader" ).text(), $( "#fShader" ).text() );
-
-teapots.push( rightTeapot );
+teapots.push( teapot4 );
 
 
 // Create an instance of our StateCoontroller class.
@@ -95,11 +102,34 @@ var sc = new StateController( dispParams );
 
 
 // Set the teapots to the renderer
-var renderer = new StandardRenderer( webglRenderer, teapots, dispParams );
+var standardRenderer =
+	new StandardRenderer( webglRenderer, teapots, dispParams );
+
+var foveatedRenderer =
+	new FoveatedRenderer( webglRenderer, dispParams );
+
+var dofRenderer =
+	new DofRenderer( webglRenderer, dispParams );
+
+var anaglyphRenderer =
+	new AnaglyphRenderer( webglRenderer, dispParams );
 
 
 // Instantiate our MVPmat class
 var mat = new MVPmat( dispParams );
+
+
+
+// Global variables to control the rendering mode
+const STANDARD_MODE = 0;
+const FOVEATED_MODE = 1;
+const DOF_MODE = 2;
+const ANAGLYPH_MODE = 3;
+
+// Select which mode for rendering
+// This is controlled by clicks on the button or the keyboard
+// See utils.js
+var renderingMode = STANDARD_MODE;
 
 
 // Start rendering!
@@ -131,14 +161,57 @@ function animate() {
 
 	requestAnimationFrame( animate );
 
+	// Draw the gaze position (see utils.js)
+	drawGaze( sc.state.gazePosition, dispParams );
+
 	// Start performance monitoring
 	stats.begin();
 
 	// update model/view/projection matrices
-	mat.update( sc.state );
+	mat.update( sc.state, renderingMode );
 
-	// Render with the current model/view/projection matrices
-	renderer.render( mat.modelMat, mat.viewMat, mat.projectionMat );
+	if ( renderingMode === STANDARD_MODE ) {
+
+		// One rendering pass
+		standardRenderer.render(
+			sc.state, mat.modelMat, mat.viewMat, mat.projectionMat );
+
+	} else if ( renderingMode === FOVEATED_MODE ) {
+
+		// First rendering pass (into FBO)
+		standardRenderer.renderOnTarget(
+			foveatedRenderer.renderTarget, sc.state,
+			mat.modelMat, mat.viewMat, mat.projectionMat );
+
+		// Second rendering pass (onto screen)
+		foveatedRenderer.render( sc.state );
+
+	} else if ( renderingMode === DOF_MODE ) {
+
+		// First rendering pass (into FBO)
+		standardRenderer.renderOnTarget(
+			dofRenderer.renderTarget,	sc.state,
+			mat.modelMat, mat.viewMat, mat.projectionMat );
+
+		// Second rendering pass (onto screen)
+		dofRenderer.render( sc.state, mat.projectionMat );
+
+	} else if ( renderingMode === ANAGLYPH_MODE ) {
+
+		// First rendering pass (left eye into left FBO)
+		standardRenderer.renderOnTarget(
+			anaglyphRenderer.renderTargetL,	sc.state,
+			mat.modelMat, mat.anaglyphViewMat.L, mat.anaglyphProjectionMat.L );
+
+		// Second rendering pass (right eye into right FBO)
+		standardRenderer.renderOnTarget(
+			anaglyphRenderer.renderTargetR,	sc.state,
+			mat.modelMat, mat.anaglyphViewMat.R, mat.anaglyphProjectionMat.R );
+
+		// Third rendering pass (onto screen)
+		anaglyphRenderer.render();
+
+	}
 
 	// End performance monitoring
 	stats.end();

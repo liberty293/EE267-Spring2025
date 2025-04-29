@@ -27,7 +27,12 @@ attribute vec3 normal;
 
 void main() {
 
+	vec4 P =  modelViewMat * vec4(position,1.0);
+	fragPosCam = P.xyz/P.w;
+	normalCam = normalMat * normal;
+
 	gl_Position = projectionMat * modelViewMat * vec4( position, 1.0 );
+
 
 }
 ` );

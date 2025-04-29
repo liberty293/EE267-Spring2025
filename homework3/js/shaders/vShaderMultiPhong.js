@@ -2,10 +2,9 @@
  * @file Phong vertex shader with point and directional lights
  *
  * @copyright The Board of Trustees of the Leland Stanford Junior University
- * @version 2021/04/01
+ * @version 2022/04/14
  */
 
-/* TODO (2.3) */
 
 var shaderID = "vShaderMultiPhong";
 
@@ -15,8 +14,8 @@ var shader = document.createTextNode( `
  * to a fragment shader. In the fragment shader, these variables are
  * interpolated between neighboring vertexes.
  */
-varying vec3 normalCam; // Normal in view coordinate
-varying vec3 fragPosCam; // Vertex position in view cooridnate
+varying vec3 normalCam;
+varying vec3 fragPosCam;
 
 uniform mat4 modelViewMat;
 uniform mat4 projectionMat;
@@ -27,12 +26,15 @@ attribute vec3 normal;
 
 void main() {
 
-	vec4 P =  modelViewMat * vec4(position,1.0);
-	fragPosCam = P.xyz/P.w;
-	normalCam = normalMat * normal;
+	// Compute the normalized surface normal in camera space
+	normalCam = normalize( normalMat * normal );
+
+	// Compute position of the vertex in camera space.
+	// Since this value is going to be linearly interpolated to be a position
+	// of fragment, the varialbe is named to be "fragPosCam."
+	fragPosCam = vec3( modelViewMat * vec4( position, 1.0 ) );
 
 	gl_Position = projectionMat * modelViewMat * vec4( position, 1.0 );
-
 
 }
 ` );
