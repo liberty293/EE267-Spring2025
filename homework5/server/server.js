@@ -19,7 +19,7 @@
  */
 
 // Import serialport library
-const SerialPort = require( "serialport" );
+const { SerialPort, ReadlineParser } = require('serialport')
 
 // Import WebSocketServer
 const WebSocketServer = require( "ws" ).Server;
@@ -92,12 +92,12 @@ function findSerialPort() {
 		ports => ports.forEach(
 			function ( port ) {
 
-				if ( port.manufacturer == "Teensyduino" ||
-					port.manufacturer == "Microsoft" ) {
+				if (( port.manufacturer == "Teensyduino" ||
+					port.manufacturer == "Microsoft" ) && !port.friendlyName.includes("Bluetooth") )  {
 
 					console.log( "Teensy found!" );
 
-					setupSerialPort( port.comName );
+					setupSerialPort( port.path );
 
 					connected = true;
 
@@ -126,13 +126,14 @@ function findSerialPort() {
 function setupSerialPort( portName ) {
 
 	// Instantiate SerialPort
-	const parser = new SerialPort.parsers.Readline();
+	const parser = new ReadlineParser();
 
-	const serialPort = new SerialPort( portName, {
+	const serialPort = new SerialPort( {
+        
+        path: portName,
+        baudRate: 115200
 
-		baudRate: 115200
-
-	} );
+    } );
 
 	serialPort.pipe( parser );
 
