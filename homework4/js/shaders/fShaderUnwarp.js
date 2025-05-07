@@ -39,7 +39,20 @@ uniform float distLensScreen;
 
 void main() {
 
-	gl_FragColor = texture2D( map, textureCoords );
+	vec2 r2 = (textureCoords - centerCoordinate) * viewportSize; //in
+	float rtil = sqrt(r2.x*r2.x + r2.y*r2.y); //length
+	float r = rtil / distLensScreen;
+	vec2 coordsD = (textureCoords - centerCoordinate) * (1.0 + K.x * r*r + K.y * r * r * r * r);
+	coordsD += centerCoordinate;
+	if ( coordsD.x < 0.0  ||  coordsD.x > 1.0  ||
+		 coordsD.y < 0.0  ||  coordsD.y > 1.0 ) {
+		// out of bounds
+		// set the color to black
+		gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
+		return;
+	}
+	//gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
+	gl_FragColor = texture2D( map, coordsD );
 
 }
 ` );

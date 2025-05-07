@@ -70,8 +70,9 @@ var DisplayParameters = function () {
 	function computeLensMagnification() {
 
 		/* TODO (2.1.1) Calculating Parameters of the Magnified Virtual Screen Image */
-
-		return 1;
+		var denom = focalLength - _this.distLensScreen;
+		console.log(focalLength / denom);
+		return focalLength / denom;
 
 	}
 
@@ -86,8 +87,10 @@ var DisplayParameters = function () {
 	function computeDistanceScreenViewer() {
 
 		/* TODO (2.1.1) Calculating Parameters of the Magnified Virtual Screen Image */
-
-		return 1500;
+		var denom = Math.abs(1/focalLength - 1/_this.distLensScreen);
+		console.log( "denom: " + 1/denom );
+		d = 1/denom
+		return d+eyeRelief;
 
 	}
 

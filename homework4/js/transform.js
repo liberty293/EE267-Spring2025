@@ -108,13 +108,35 @@ var MVPmat = function ( dispParams ) {
 	// The default values are wrong. Replace them.
 	// All the parameters you need for your calculations are found in the function arguments.
 	function computeTopBottomLeftRight( clipNear, clipFar, dispParams ) {
-
+		// console.log(clipNear)
+		// console.log(clipFar)
 		/* TODO (2.1.2) Stereo Rendering */
+		var h = dispParams.canvasHeight * dispParams.pixelPitch * dispParams.lensMagnification;
+		var w1 = dispParams.lensMagnification * dispParams.ipd / 2;
+		var w2 = dispParams.lensMagnification * (dispParams.canvasWidth * dispParams.pixelPitch - dispParams.ipd ) / 2	;	// in [mm]
 
+		var rightL = clipNear * w1 / (dispParams.distanceScreenViewer) ;
+		var leftL = -clipNear * w2 / (dispParams.distanceScreenViewer);
+		var topL = clipNear * h / (2 * dispParams.distanceScreenViewer);
+		var bottomL = -clipNear * h / (2 * dispParams.distanceScreenViewer);
+
+		var rightR = clipNear * w2 / (dispParams.distanceScreenViewer) ;
+		var leftR = -clipNear * w1 / (dispParams.distanceScreenViewer);
+
+		var topR = topL;
+		var bottomR = bottomL;
+		//console.log( topL + " " + bottomL + " " + leftL + " " + rightL );
+		//console.log( w1 + " " + w2 );
+		// Return the values
 		return {
-			topL: 80, bottomL: - 80, leftL: - 80, rightL: 80,
-			topR: 80, bottomR: - 80, leftR: - 80, rightR: 80,
+			topL: topL, bottomL: bottomL, leftL: leftL, rightL: rightL,
+			topR: topR, bottomR: bottomR, leftR: leftR, rightR: rightR,
 		};
+
+		// return {
+		// 	topL: topL, bottomL: bottomL, leftL: leftL, rightL: rightL,
+		// 	topR: 80, bottomR: - 80, leftR: - 80, rightR: 80,
+		// };
 
 	}
 
