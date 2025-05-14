@@ -83,11 +83,19 @@ var MVPmat = function ( dispParams ) {
 		var ipdTranslateMat =
 			new THREE.Matrix4().makeTranslation( halfIpdShift, 0, 0 );
 
+		var rotationMat =
+			new THREE.Matrix4().makeRotationFromQuaternion(
+				new THREE.Quaternion( state.imuQuaternion.x, state.imuQuaternion.y,
+					state.imuQuaternion.z, state.imuQuaternion.w ) ).transpose();
+		
+
 		var viewMat = new THREE.Matrix4()
 			.premultiply( translationMat )
 			.premultiply( ipdTranslateMat );
+		
+		//return viewMat;
 
-		return viewMat;
+		return viewMat.premultiply( rotationMat );
 
 	}
 
@@ -120,7 +128,16 @@ var MVPmat = function ( dispParams ) {
 			.premultiply( translationMat )
 			.premultiply( ipdTranslateMat );
 
-		return viewMat;
+		var rotationMat = new THREE.Matrix4()
+			.makeRotationFromQuaternion(
+				new THREE.Quaternion( state.imuQuaternion.x, state.imuQuaternion.y,
+					state.imuQuaternion.z, state.imuQuaternion.w ) ).transpose();
+		var negMat = new THREE.Matrix4()
+			.makeTranslation( 0, - neckLength, - headLength );
+		var posMat = new THREE.Matrix4()
+			.makeTranslation( 0,  neckLength, headLength );
+
+		return viewMat.premultiply(posMat).premultiply(rotationMat).premultiply(negMat);
 
 	}
 

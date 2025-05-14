@@ -46,8 +46,11 @@ public:
 
   /* function to construct a quaternion from angle-axis representation. angle is given in degrees. */
   Quaternion& setFromAngleAxis(double angle, double vx, double vy, double vz) {
-
-    //this->q[0] = ...
+    angle = angle * M_PI / 180.0; // convert to radians
+    this->q[0] = cos(angle / 2.0);
+    this->q[1] = vx * sin(angle / 2.0);
+    this->q[2] = vy * sin(angle / 2.0);
+    this->q[3] = vz * sin(angle / 2.0);
 
     return *this;
 
@@ -56,14 +59,21 @@ public:
   /* function to compute the length of a quaternion */
   double length() {
 
-    return 0.0;
+    return sqrt(this->q[0] * this->q[0] +
+                 this->q[1] * this->q[1] +
+                 this->q[2] * this->q[2] +
+                 this->q[3] * this->q[3]);
 
   }
 
   /* function to normalize a quaternion */
   Quaternion& normalize() {
 
-    //this->q[0] = ...
+    double len = this->length();
+    this->q[0] = this->q[0] / len;
+    this->q[1] = this->q[1] / len;
+    this->q[2] = this->q[2] / len;
+    this->q[3] = this->q[3] / len;
 
     return *this;
   }
@@ -71,7 +81,13 @@ public:
   /* function to invert a quaternion */
   Quaternion& inverse() {
 
-    //this->q[0] = ...
+    Quaternion cong = Quaternion(this->q[0], -this->q[1], -this->q[2], -this->q[3]);
+ 
+    double len2 = this->length() * this->length();
+    this->q[0] = cong.q[0] / len2;
+    this->q[1] = cong.q[1] / len2;
+    this->q[2] = cong.q[2] / len2;
+    this->q[3] = cong.q[3] / len2;
 
     return *this;
   }
@@ -81,7 +97,11 @@ public:
 
     Quaternion q;
 
-    //q.q[0] = ...
+    q.q[0] = a.q[0] * b.q[0] - a.q[1] * b.q[1] - a.q[2] * b.q[2] - a.q[3] * b.q[3];
+    q.q[1] = a.q[0] * b.q[1] + a.q[1] * b.q[0] + a.q[2] * b.q[3] - a.q[3] * b.q[2];
+    q.q[2] = a.q[0] * b.q[2] - a.q[1] * b.q[3] + a.q[2] * b.q[0] + a.q[3] * b.q[1];
+    q.q[3] = a.q[0] * b.q[3] + a.q[1] * b.q[2] - a.q[2] * b.q[1] + a.q[3] * b.q[0];
+
 
 
     return q;
@@ -90,7 +110,7 @@ public:
   /* function to rotate a quaternion by r * q * r^{-1} */
   Quaternion rotate(Quaternion r) {
 
-    return Quaternion();
+    return multiply(multiply(r,*this),r.inverse());
 
   }
 

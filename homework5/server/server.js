@@ -91,9 +91,14 @@ function findSerialPort() {
 	SerialPort.list().then(
 		ports => ports.forEach(
 			function ( port ) {
+				// Check if the port is Teensy
+				console.log("Port info:", port);
 
-				if (( port.manufacturer == "Teensyduino" ||
-					port.manufacturer == "Microsoft" ) && !port.friendlyName.includes("Bluetooth") )  {
+				if (
+					(port.manufacturer && port.manufacturer.includes("Teensy")) ||
+					(port.vendorId === "16c0" && port.productId === "0483") || // Teensy USB IDs
+					(port.path && port.path.includes("usbmodem"))
+				  ) {
 
 					console.log( "Teensy found!" );
 

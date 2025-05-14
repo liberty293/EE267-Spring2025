@@ -34,10 +34,10 @@ bool simulateImu = false;
 bool test = false;
 
 //if measureImuBias is true, measure imu bias and variance
-bool measureImuBias = true;
+bool measureImuBias = false;
 
 //if measureBias is false, set the imu bias to the following:
-double gyrBiasSet[3] = {0.17408, -0.19935, 0.44581};
+double gyrBiasSet[3] = {0.14283, -0.22419, 0.58766}; //0.17408, -0.19935, 0.44581
 
 //initialize orientation tracker
 OrientationTracker tracker(alphaImuFilter, simulateImu);
